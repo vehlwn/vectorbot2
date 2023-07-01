@@ -54,9 +54,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                 )
             ).first()
             if point_row is None:
-                logger.info(
-                    f"Creating new point for existing user: {user_row}"
-                )
+                logger.info(f"Creating new point for existing user: {user_row}")
                 session.add(
                     Point(
                         value=value,
@@ -79,6 +77,13 @@ async def change_credit_handler(message: telebot.types.Message):
 
     user = message.reply_to_message.from_user
     if user.is_bot:
+        return
+
+    if (
+        message.chat.type != "group"
+        and message.from_user.id != settings.SUPER_ADMIN_ID
+    ):
+        await bot.reply_to(message, strings.START_PRIVATE_CHAT)
         return
 
     match = re.fullmatch(settings.CHANGE_CREDIT_PATTERN, message.text)
