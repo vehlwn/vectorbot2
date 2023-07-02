@@ -30,8 +30,8 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
         if currency_row is None:
             logger.info(f"Creating new currency: {currency}")
             session.add(Currency(name=currency))
+            currency_row = session.scalars(currency_expr).one()
 
-        currency_row = session.scalars(currency_expr).one()
         user_row = session.scalars(
             select(User).where((User.chat_id == chat_id) & (User.user_id == user_id))
         ).first()
