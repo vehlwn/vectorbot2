@@ -132,31 +132,27 @@ async def balls_handler(message: telebot.types.Message):
 
 def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
     with database.Session.begin() as session:
-        currency_row = session.scalars(
-            select(Currency).where(Currency.name == currency)
-        ).first()
+        currency_expr = select(Currency).where(Currency.name == currency)
+        currency_row = session.scalars(currency_expr).first()
         if currency_row is None:
             logger.info(f"Creating new currency: {currency}")
             session.add(Currency(name=currency))
 
-        currency_row = session.scalars(
-            select(Currency).where(Currency.name == currency)
-        ).one()
+        currency_row = session.scalars(currency_expr).one()
         user_row = session.scalars(
             select(User).where((User.chat_id == chat_id) & (User.user_id == user_id))
         ).first()
         if user_row is None:
             new_user = User(chat_id=chat_id, user_id=user_id)
             logger.info(f"Creating new user: {new_user}")
-            new_point = Point(value=value, currency_id=currency_row.id)
+            new_point = Point(value=value, currency=currency_row)
             logger.info(f"Creating new point for new user: {new_point}")
             new_user.points.append(new_point)
             session.add(new_user)
         else:
             point_row = session.scalars(
                 select(Point).where(
-                    (Point.user_id == user_row.id)
-                    & (Point.currency_id == currency_row.id)
+                    (Point.user_id == user_row.id) & (Point.currency == currency_row)
                 )
             ).first()
             if point_row is None:
@@ -164,7 +160,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                 session.add(
                     Point(
                         value=value,
-                        currency_id=currency_row.id,
+                        currency=currency_row,
                         user_id=user_row.id,
                     )
                 )
