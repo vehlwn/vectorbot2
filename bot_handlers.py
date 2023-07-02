@@ -54,7 +54,7 @@ async def redits_handler(message: telebot.types.Message):
     if message.reply_to_message is None:
         await _my_credits_command(message)
         return
-    user = message.from_user
+    user = message.reply_to_message.from_user
     credits = _get_credits_string(message.chat.id, user.id)
     if len(credits) == 0:
         text = "У {user.first_name} нет баллов."
