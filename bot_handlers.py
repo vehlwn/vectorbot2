@@ -1,5 +1,6 @@
 import typing
 from sqlalchemy import select, desc, func
+import sqlalchemy.orm
 import re
 import telebot
 
@@ -130,6 +131,16 @@ async def balls_handler(message: telebot.types.Message):
     await bot.reply_to(message, text)
 
 
+def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
+    result = session.scalars(
+        select(Currency).outerjoin(Point).where(Point.currency_id.is_(None))
+    )
+    logger.info("Deleting orphaned currencies:")
+    for row in result:
+        logger.info(row)
+        session.delete(row)
+
+
 def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
     with database.Session.begin() as session:
         currency_expr = select(Currency).where(Currency.name == currency)
@@ -170,6 +181,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                 if point_row.value == 0:
                     logger.info("Deleting zero value")
                     session.delete(point_row)
+                    _garbage_collect_currencies(session)
 
 
 @bot.message_handler()
