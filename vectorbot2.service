@@ -1,0 +1,10 @@
+[Unit]
+Description = Telegram bot to count points
+After = network.target
+
+[Service]
+WorkingDirectory = /path/to/vectorbot2
+ExecStart = /path/to/vectorbot2/venv/bin/python main.py
+
+[Install]
+WantedBy = multi-user.target
