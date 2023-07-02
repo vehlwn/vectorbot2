@@ -167,6 +167,9 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
             else:
                 logger.info(f"Updating points: {point_row.value}")
                 point_row.value += value
+                if point_row.value == 0:
+                    logger.info("Deleting zero value")
+                    session.delete(point_row)
 
 
 @bot.message_handler()
