@@ -1,8 +1,10 @@
 from sqlalchemy import select, desc
 import telebot
+import traceback
 import typing
 
 from async_bot import bot
+from logger import logger
 from models import Currency, Point, User
 import database
 import strings
@@ -13,7 +15,7 @@ async def _get_first_name(user_id: int):
     return chat.first_name
 
 
-async def handle(message: telebot.types.Message):
+async def _handle_impl(message: telebot.types.Message):
     argument = telebot.util.extract_arguments(typing.cast(str, message.text))
     if len(argument) == 0:
         currency = strings.CREDIT_BOT_DEFAULT_CURRENCY
@@ -48,3 +50,14 @@ async def handle(message: telebot.types.Message):
     text += await concat_values(best)
     text += await concat_values(worst)
     await bot.reply_to(message, text)
+
+
+async def handle(message: telebot.types.Message):
+    try:
+        logger.info(
+                f"[handle] rank: {message.from_user.id} {message.from_user.first_name}: {message.text}"
+        )
+        await _handle_impl(message)
+    except Exception as er:
+        await bot.reply_to(message, f"Error: {er}")
+        traceback.print_exc()

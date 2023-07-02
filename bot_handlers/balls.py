@@ -1,14 +1,16 @@
 from sqlalchemy import select, desc, func
 import telebot
+import traceback
 
 from async_bot import bot
+from logger import logger
 from models import Currency, Point, User
 import database
 import settings
 import strings
 
 
-async def handle(message: telebot.types.Message):
+async def _handle_impl(message: telebot.types.Message):
     count = settings.MAX_BALLS_ROWS
     chat_id = message.chat.id
     with database.Session.begin() as session:
@@ -29,3 +31,14 @@ async def handle(message: telebot.types.Message):
                 strings.get_holders_message_for_holders(row.count),
             )
     await bot.reply_to(message, text)
+
+
+async def handle(message: telebot.types.Message):
+    try:
+        logger.info(
+            f"[handle] balls: {message.from_user.id} {message.from_user.first_name}"
+        )
+        await _handle_impl(message)
+    except Exception as er:
+        await bot.reply_to(message, f"Error: {er}")
+        traceback.print_exc()

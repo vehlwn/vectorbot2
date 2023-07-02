@@ -1,8 +1,10 @@
 from sqlalchemy import select
 import telebot
 import typing
+import traceback
 
 from async_bot import bot
+from logger import logger
 from models import Currency, Point, User
 import database
 import strings
@@ -37,13 +39,20 @@ async def _my_credits_command(message: telebot.types.Message):
 
 
 async def handle(message: telebot.types.Message):
-    if message.reply_to_message is None:
-        await _my_credits_command(message)
-        return
-    user = message.reply_to_message.from_user
-    credits = _get_credits_string(message.chat.id, user.id)
-    if len(credits) == 0:
-        text = "У {user.first_name} нет баллов."
-    else:
-        text = f"У {user.first_name}:\n{credits}"
-    await bot.reply_to(message, text)
+    try:
+        logger.info(
+            f"[handle] credits: {message.from_user.id} {message.from_user.first_name}"
+        )
+        if message.reply_to_message is None:
+            await _my_credits_command(message)
+            return
+        user = message.reply_to_message.from_user
+        credits = _get_credits_string(message.chat.id, user.id)
+        if len(credits) == 0:
+            text = "У {user.first_name} нет баллов."
+        else:
+            text = f"У {user.first_name}:\n{credits}"
+        await bot.reply_to(message, text)
+    except Exception as er:
+        await bot.reply_to(message, f"Error: {er}")
+        traceback.print_exc()

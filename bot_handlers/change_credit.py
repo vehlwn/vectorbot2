@@ -1,9 +1,11 @@
 from sqlalchemy import select
-import sqlalchemy.orm
 import re
+import sqlalchemy.orm
 import telebot
+import traceback
 
 from async_bot import bot
+from logger import logger
 from logger import logger
 from models import Currency, Point, User
 import database
@@ -64,8 +66,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                     _garbage_collect_currencies(session)
 
 
-async def handle(message: telebot.types.Message):
-    logger.info("change_credit_handler")
+async def _handle_impl(message: telebot.types.Message):
     if (
         message.reply_to_message is None
         and message.from_user.id != settings.SUPER_ADMIN_ID
@@ -123,16 +124,13 @@ async def handle(message: telebot.types.Message):
         if points > 0:
             text = strings.SELF_LIKE
         else:
-            logger.info(
-                f"{whom_to_credit.id=} {whom_to_credit.first_name=} {points=} {currency=}"
-            )
             text = strings.CREDIT_MINUS_ITSELF
     else:
-        logger.info(
-            f"{whom_to_credit.id=} {whom_to_credit.first_name=} {points=} {currency=}"
-        )
         text = strings.get_string_for_points(currency, points)
 
+    logger.info(
+        f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
+    )
     _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
     if message.reply_to_message is None:
@@ -140,3 +138,14 @@ async def handle(message: telebot.types.Message):
     else:
         reply_to_message = message.reply_to_message
     await bot.reply_to(reply_to_message, text)
+
+
+async def handle(message: telebot.types.Message):
+    try:
+        logger.info(
+            f"[handle] change_credit: {message.from_user.id} {message.from_user.first_name}: {message.text}"
+        )
+        await _handle_impl(message)
+    except Exception as er:
+        await bot.reply_to(message, f"Error: {er}")
+        traceback.print_exc()
