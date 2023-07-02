@@ -4,6 +4,7 @@ import typing
 START_PRIVATE_CHAT = "Добавь меня в чат чтобы отслеживать баллы"
 SELF_LIKE = "Запрещено! Немедленно прекратите! Штраф 1000 рублей."
 CREDIT_MINUS_ITSELF = "Ok Idiot, You lost it"
+CREDIT_BOT_DEFAULT_CURRENCY = "вектор"
 
 _PLUS_CREDIT_MESSAGES = [
     "Родина гордится тобой! +{} {}{}!",
