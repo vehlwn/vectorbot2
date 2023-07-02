@@ -137,13 +137,13 @@ def _get_credits_string(chat_id: int, user_id: int) -> str:
     currencies: typing.Dict[str, int] = dict()
     with database.Session.begin() as session:
         result = session.execute(
-            select(User, Point, Currency)
+            select(Point.value, Currency.name)
             .join(User.points)
             .join(Point.currency)
             .where((User.chat_id == chat_id) & (User.user_id == user_id))
         )
         for row in result:
-            currencies[row.Currency.name] = row.Point.value
+            currencies[row.name] = row.value
     return "\n".join(
         [
             f"{value} {key}{strings.get_points_message_for_points(value)}"
