@@ -1,3 +1,4 @@
+import typing
 from sqlalchemy import select
 import re
 import telebot
@@ -77,6 +78,7 @@ async def change_credit_handler(message: telebot.types.Message):
 
     user = message.reply_to_message.from_user
     if user.is_bot:
+        logger.info("Reply to bot")
         return
 
     if (
@@ -86,8 +88,9 @@ async def change_credit_handler(message: telebot.types.Message):
         await bot.reply_to(message, strings.START_PRIVATE_CHAT)
         return
 
-    match = re.fullmatch(settings.CHANGE_CREDIT_PATTERN, message.text)
+    match = re.match(settings.CHANGE_CREDIT_PATTERN, message.text)
     if match is None:
+        logger.info("Regex does not match")
         return
 
     currency = match[3]
@@ -128,6 +131,47 @@ async def change_credit_handler(message: telebot.types.Message):
         text = strings.get_string_for_points(currency, points)
     _increment_credit(message.chat.id, user.id, currency, points)
     await bot.reply_to(message.reply_to_message, text)
+
+
+def _get_credits_string(chat_id: int, user_id: int) -> str:
+    currencies: typing.Dict[str, int] = dict()
+    with database.Session.begin() as session:
+        user_row = session.scalars(
+            select(User).where((User.chat_id == chat_id) & (User.user_id == user_id))
+        ).first()
+        if user_row is None:
+            return ""
+        for point in user_row.points:
+            currencies[point.currency.name] = point.value
+    return "\n".join(
+        [
+            f"{value} {key}{strings.get_points_message_for_points(value)}"
+            for key, value in currencies.items()
+        ]
+    )
+
+
+async def _my_credits_command(message: telebot.types.Message):
+    credits = _get_credits_string(message.chat.id, message.from_user.id)
+    if len(credits) == 0:
+        text = "У тебя нет баллов."
+    else:
+        text = f"У тебя:\n{credits}"
+    await bot.reply_to(message, text)
+
+
+@bot.message_handler(commands=["credits"])
+async def redits_handler(message: telebot.types.Message):
+    if message.reply_to_message is None:
+        await _my_credits_command(message)
+        return
+    user = message.from_user
+    credits = _get_credits_string(message.chat.id, user.id)
+    if len(credits) == 0:
+        text = "У {user.first_name} нет баллов."
+    else:
+        text = f"У {user.first_name}:\n{credits}"
+    await bot.reply_to(message, text)
 
 
 def setup():

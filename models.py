@@ -26,6 +26,8 @@ class Point(Base):
     currency_id = mapped_column(ForeignKey("currencies.id", ondelete="CASCADE"))
     user_id = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
+    currency: Mapped["Currency"] = relationship()
+
     __table_args__ = (UniqueConstraint("currency_id", "user_id"),)
 
     def __repr__(self) -> str:

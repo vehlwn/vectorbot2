@@ -31,7 +31,7 @@ def _get_declination(number: int, cases: typing.List[str]) -> str:
     return cases[2]
 
 
-def _get_points_message_for_points(points: int) -> str:
+def get_points_message_for_points(points: int) -> str:
     return _get_declination(points, ["балл", "балла", "баллов"])
 
 
@@ -42,4 +42,4 @@ def get_string_for_points(currency: str, points: int) -> str:
         messages = _MINUS_CREDIT_MESSAGES
     message = random.choice(messages)
 
-    return message.format(points, currency, _get_points_message_for_points(points))
+    return message.format(points, currency, get_points_message_for_points(points))
