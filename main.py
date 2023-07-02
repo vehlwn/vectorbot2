@@ -8,9 +8,10 @@ import models
 
 
 async def main():
+    bot_handlers.register_all()
+    logger.info("Bot handles registered")
     models.create_all()
     logger.info("DB models created")
-    bot_handlers.setup()
     logger.info("Bot is listening")
     await bot.polling()
 

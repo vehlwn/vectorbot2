@@ -1,5 +1,4 @@
-import typing
-from sqlalchemy import select, desc, func
+from sqlalchemy import select
 import sqlalchemy.orm
 import re
 import telebot
@@ -10,125 +9,6 @@ from models import Currency, Point, User
 import database
 import settings
 import strings
-
-
-@bot.message_handler(commands=["ping"])
-async def ping_handler(message: telebot.types.Message):
-    await bot.reply_to(message, text="I'm alive!")
-
-
-@bot.message_handler(commands=["get_my_id"])
-async def get_my_id_handler(message: telebot.types.Message):
-    await bot.reply_to(message, text=str(message.from_user.id))
-
-
-def _get_credits_string(chat_id: int, user_id: int) -> str:
-    currencies: typing.Dict[str, int] = dict()
-    with database.Session.begin() as session:
-        result = session.execute(
-            select(Point.value, Currency.name)
-            .join(User.points)
-            .join(Point.currency)
-            .where((User.chat_id == chat_id) & (User.user_id == user_id))
-        )
-        for row in result:
-            currencies[row.name] = row.value
-    return "\n".join(
-        [
-            f"{value} {key}{strings.get_points_message_for_points(value)}"
-            for key, value in currencies.items()
-        ]
-    )
-
-
-async def _my_credits_command(message: telebot.types.Message):
-    credits = _get_credits_string(message.chat.id, message.from_user.id)
-    if len(credits) == 0:
-        text = "У тебя нет баллов."
-    else:
-        text = f"У тебя:\n{credits}"
-    await bot.reply_to(message, text)
-
-
-@bot.message_handler(commands=["credits"])
-async def redits_handler(message: telebot.types.Message):
-    if message.reply_to_message is None:
-        await _my_credits_command(message)
-        return
-    user = message.reply_to_message.from_user
-    credits = _get_credits_string(message.chat.id, user.id)
-    if len(credits) == 0:
-        text = "У {user.first_name} нет баллов."
-    else:
-        text = f"У {user.first_name}:\n{credits}"
-    await bot.reply_to(message, text)
-
-
-async def _get_first_name(user_id: int):
-    chat = await bot.get_chat(user_id)
-    return chat.first_name
-
-
-@bot.message_handler(commands=["rank"])
-async def rank_handler(message: telebot.types.Message):
-    argument = telebot.util.extract_arguments(typing.cast(str, message.text))
-    if len(argument) == 0:
-        currency = strings.CREDIT_BOT_DEFAULT_CURRENCY
-    else:
-        currency = argument
-
-    chat_id = message.chat.id
-    with database.Session.begin() as session:
-        result = session.execute(
-            select(User.user_id, Point.value)
-            .join(User.points)
-            .join(Point.currency)
-            .where((User.chat_id == chat_id) & (Currency.name == currency))
-            .order_by(desc(Point.value))
-        )
-        leaderboard = []
-        for row in result:
-            leaderboard.append((row.user_id, row.value))
-
-    best = leaderboard[:3]
-    worst = leaderboard[3:][-3:]
-    text = f"Больше всего {currency}баллов:\n"
-    if len(best) == 0:
-        text += "ни у кого!"
-
-    async def concat_values(leaderboard):
-        ret = ""
-        for user_id, value in leaderboard:
-            ret += "{} ➔ {}\n".format(await _get_first_name(user_id), str(value))
-        return ret
-
-    text += await concat_values(best)
-    text += await concat_values(worst)
-    await bot.reply_to(message, text)
-
-
-@bot.message_handler(commands=["balls"])
-async def balls_handler(message: telebot.types.Message):
-    count = settings.MAX_BALLS_ROWS
-    chat_id = message.chat.id
-    with database.Session.begin() as session:
-        result = session.execute(
-            select(Currency.name, func.count(User.user_id).label("count"))
-            .join(User.points)
-            .join(Point.currency)
-            .where(User.chat_id == chat_id)
-            .group_by(Currency.id)
-            .order_by(desc("count"))
-            .limit(count)
-        )
-        text = ""
-        for row in result:
-            text += "{}баллы ➔ {} {}\n".format(
-                row.name,
-                row.count,
-                strings.get_holders_message_for_holders(row.count),
-            )
-    await bot.reply_to(message, text)
 
 
 def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
@@ -184,8 +64,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                     _garbage_collect_currencies(session)
 
 
-@bot.message_handler()
-async def change_credit_handler(message: telebot.types.Message):
+async def handle(message: telebot.types.Message):
     logger.info("change_credit_handler")
     if (
         message.reply_to_message is None
@@ -261,7 +140,3 @@ async def change_credit_handler(message: telebot.types.Message):
     else:
         reply_to_message = message.reply_to_message
     await bot.reply_to(reply_to_message, text)
-
-
-def setup():
-    pass
