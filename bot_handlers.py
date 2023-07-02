@@ -90,7 +90,7 @@ async def rank_handler(message: telebot.types.Message):
             leaderboard.append((row.user_id, row.value))
 
     best = leaderboard[:3]
-    worst = leaderboard[-3:]
+    worst = leaderboard[3:][-3:]
     text = f"Больше всего {currency}баллов:\n"
     if len(best) == 0:
         text += "ни у кого!"
