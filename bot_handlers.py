@@ -1,5 +1,5 @@
 import typing
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 import re
 import telebot
 
@@ -210,11 +210,35 @@ async def rank_handler(message: telebot.types.Message):
     async def concat_values(leaderboard):
         ret = ""
         for user_id, value in leaderboard:
-            ret += f"{await _get_first_name(user_id)} ➔ {str(value)}\n"
+            ret += "{} ➔ {}\n".format(await _get_first_name(user_id), str(value))
         return ret
 
     text += await concat_values(best)
     text += await concat_values(worst)
+    await bot.reply_to(message, text)
+
+
+@bot.message_handler(commands=["balls"])
+async def balls_handler(message: telebot.types.Message):
+    count = settings.MAX_BALLS_ROWS
+    chat_id = message.chat.id
+    with database.Session.begin() as session:
+        result = session.execute(
+            select(Currency.name, func.count(User.user_id).label("count"))
+            .join(User.points)
+            .join(Point.currency)
+            .where(User.chat_id == chat_id)
+            .group_by(Currency.id)
+            .order_by(desc("count"))
+            .limit(count)
+        )
+        text = ""
+        for row in result:
+            text += "{}баллы ➔ {} {}\n".format(
+                row.name,
+                row.count,
+                strings.get_holders_message_for_holders(row.count),
+            )
     await bot.reply_to(message, text)
 
 

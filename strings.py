@@ -36,6 +36,10 @@ def get_points_message_for_points(points: int) -> str:
     return _get_declination(points, ["балл", "балла", "баллов"])
 
 
+def get_holders_message_for_holders(holders):
+    return _get_declination(holders, ["держатель", "держателя", "держателей"])
+
+
 def get_string_for_points(currency: str, points: int) -> str:
     if points > 0:
         messages = _PLUS_CREDIT_MESSAGES
