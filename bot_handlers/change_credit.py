@@ -23,15 +23,21 @@ def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
         session.delete(row)
 
 
+def _get_or_create_currency(
+    session: sqlalchemy.orm.Session, currency: str
+) -> Currency:
+    expr = select(Currency).where(Currency.name == currency)
+    currency_row = session.scalars(expr).first()
+    if currency_row is None:
+        logger.info(f"Creating new currency: {currency}")
+        session.add(Currency(name=currency))
+        currency_row = session.scalars(expr).one()
+    return currency_row
+
+
 def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
     with database.Session.begin() as session:
-        currency_expr = select(Currency).where(Currency.name == currency)
-        currency_row = session.scalars(currency_expr).first()
-        if currency_row is None:
-            logger.info(f"Creating new currency: {currency}")
-            session.add(Currency(name=currency))
-            currency_row = session.scalars(currency_expr).one()
-
+        currency_row = _get_or_create_currency(session, currency)
         user_row = session.scalars(
             select(User).where((User.chat_id == chat_id) & (User.user_id == user_id))
         ).first()
@@ -66,6 +72,21 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                     _garbage_collect_currencies(session)
 
 
+def _parse_credit_line(text: str):
+    match = re.search(settings.CHANGE_CREDIT_PATTERN, text)
+    if match is None:
+        logger.info("Unexpected! Regex does not match")
+        return None
+    currency = match[3]
+    sign = +1 if match[1] == "+" else -1
+    if len(match[2]) > 0:
+        points = int(match[2])
+    else:
+        points = 1
+    points = sign * points
+    return points, currency
+
+
 async def _handle_impl(message: telebot.types.Message):
     if (
         message.reply_to_message is None
@@ -73,31 +94,20 @@ async def _handle_impl(message: telebot.types.Message):
     ):
         return
 
-    if message.reply_to_message is None:
-        whom_to_credit = message.from_user
-    else:
-        whom_to_credit = message.reply_to_message.from_user
-
     if message.text is None:
         return
 
-    match = re.search(settings.CHANGE_CREDIT_PATTERN, message.text)
-    if match is None:
-        logger.info("Regex does not match")
+    parsed_result = _parse_credit_line(message.text)
+    if parsed_result is None:
         return
 
-    currency = match[3]
+    (points, currency) = parsed_result
     if len(currency) > settings.MAX_CURRENCY_LEN:
         await bot.reply_to(
             message,
             f"Слишком длинно! Лимит на длину - {settings.MAX_CURRENCY_LEN} символов!",
         )
         return
-    sign = +1 if match[1] == "+" else -1
-    if len(match[2]) > 0:
-        points = int(match[2])
-    else:
-        points = 1
 
     if (
         message.from_user.id != settings.SUPER_ADMIN_ID
@@ -109,7 +119,12 @@ async def _handle_impl(message: telebot.types.Message):
         )
         return
 
-    points = sign * points
+    if message.reply_to_message is None:
+        whom_to_credit = message.from_user
+    else:
+        whom_to_credit = message.reply_to_message.from_user
+
+    should_increment = False
     if (
         message.from_user.id != settings.SUPER_ADMIN_ID
         and message.from_user.id == whom_to_credit.id
@@ -118,14 +133,16 @@ async def _handle_impl(message: telebot.types.Message):
             text = strings.SELF_LIKE
         else:
             text = strings.CREDIT_MINUS_ITSELF
-            _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
+            should_increment = True
     else:
         text = strings.get_string_for_points(currency, points)
-        _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
+        should_increment = True
 
-    logger.info(
-        f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
-    )
+    if should_increment:
+        logger.info(
+            f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
+        )
+        _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
     if message.reply_to_message is None:
         reply_to_message = message
