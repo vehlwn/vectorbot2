@@ -81,13 +81,6 @@ async def _handle_impl(message: telebot.types.Message):
     if message.text is None:
         return
 
-    if (
-        message.chat.type != "group"
-        and message.from_user.id != settings.SUPER_ADMIN_ID
-    ):
-        await bot.reply_to(message, strings.START_PRIVATE_CHAT)
-        return
-
     match = re.match(settings.CHANGE_CREDIT_PATTERN, message.text)
     if match is None:
         logger.info("Regex does not match")
@@ -125,13 +118,14 @@ async def _handle_impl(message: telebot.types.Message):
             text = strings.SELF_LIKE
         else:
             text = strings.CREDIT_MINUS_ITSELF
+            _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
     else:
         text = strings.get_string_for_points(currency, points)
+        _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
     logger.info(
         f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
     )
-    _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
     if message.reply_to_message is None:
         reply_to_message = message
@@ -142,9 +136,11 @@ async def _handle_impl(message: telebot.types.Message):
 
 async def handle(message: telebot.types.Message):
     try:
-        logger.info(
-            f"[handle] change_credit: {message.from_user.id} {message.from_user.first_name}: {message.text}"
-        )
+        if message.chat.type == "private":
+            chat_name = f"private:{message.chat.id}:{message.chat.first_name}"
+        else:
+            chat_name = f"group:{message.chat.id}:{message.chat.title}"
+        logger.info(f"[handle] change_credit: {chat_name} {message.text}")
         await _handle_impl(message)
     except Exception as er:
         await bot.reply_to(message, f"Error: {er}")
