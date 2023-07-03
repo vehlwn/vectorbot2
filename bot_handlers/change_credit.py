@@ -81,7 +81,7 @@ async def _handle_impl(message: telebot.types.Message):
     if message.text is None:
         return
 
-    match = re.match(settings.CHANGE_CREDIT_PATTERN, message.text)
+    match = re.search(settings.CHANGE_CREDIT_PATTERN, message.text)
     if match is None:
         logger.info("Regex does not match")
         return
