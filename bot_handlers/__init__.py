@@ -3,7 +3,7 @@ from . import ping, get_my_id, credits, rank, balls, change_credit
 import settings
 
 
-_CHAT_TYPES = ["private", "group"]
+_CHAT_TYPES = ["private", "group", "supergroup"]
 
 
 def register_all():
