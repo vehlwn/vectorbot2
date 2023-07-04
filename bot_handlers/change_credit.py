@@ -162,7 +162,9 @@ async def handle(message: telebot.types.Message):
             )
         else:
             chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.title}"
-        logger.info(f"[handle] change_credit: {chat_name} {message.text}")
+        logger.info(
+            f"[handle] change_credit: who_triggered={message.from_user.id} {message.from_user.first_name} {chat_name} {message.text}"
+        )
         await _handle_impl(message)
     except Exception as er:
         await bot.reply_to(message, f"Error: {er}")
