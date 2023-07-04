@@ -26,13 +26,13 @@ def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
 def _get_or_create_currency(
     session: sqlalchemy.orm.Session, currency: str
 ) -> Currency:
-    expr = select(Currency).where(Currency.name == currency)
-    currency_row = session.scalars(expr).first()
-    if currency_row is None:
-        logger.info(f"Creating new currency: {currency}")
-        session.add(Currency(name=currency))
-        currency_row = session.scalars(expr).one()
-    return currency_row
+    ret = session.scalars(select(Currency).where(Currency.name == currency)).first()
+    if ret is None:
+        new = Currency(name=currency)
+        logger.info(f"Creating new currency: {new}")
+        session.add(new)
+        ret = new
+    return ret
 
 
 def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
@@ -64,7 +64,7 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                     )
                 )
             else:
-                logger.info(f"Updating points: {point_row.value}")
+                logger.info(f"Updating points: {point_row}")
                 point_row.value += value
                 if point_row.value == 0:
                     logger.info("Deleting zero value")
