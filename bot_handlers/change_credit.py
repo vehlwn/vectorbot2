@@ -139,8 +139,9 @@ async def _handle_impl(message: telebot.types.Message):
         should_increment = True
 
     if should_increment:
+        who_triggered = message.from_user
         logger.info(
-            f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
+            f"{who_triggered.id=} {who_triggered.first_name} {whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
         )
         _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
@@ -154,7 +155,9 @@ async def _handle_impl(message: telebot.types.Message):
 async def handle(message: telebot.types.Message):
     try:
         if message.chat.type == "private":
-            chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.first_name}"
+            chat_name = (
+                f"{message.chat.type}:{message.chat.id}:{message.chat.first_name}"
+            )
         else:
             chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.title}"
         logger.info(f"[handle] change_credit: {chat_name} {message.text}")
