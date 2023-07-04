@@ -21,6 +21,8 @@ def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
     for row in result:
         logger.info(row)
         session.delete(row)
+    else:
+        logger.info("Nothing to delete")
 
 
 def _get_or_create_currency(
