@@ -141,9 +141,8 @@ async def _handle_impl(message: telebot.types.Message):
         should_increment = True
 
     if should_increment:
-        who_triggered = message.from_user
         logger.info(
-            f"{who_triggered.id=} {who_triggered.first_name} {whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
+            f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
         )
         _increment_credit(message.chat.id, whom_to_credit.id, currency, points)
 
@@ -163,7 +162,7 @@ async def handle(message: telebot.types.Message):
         else:
             chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.title}"
         logger.info(
-            f"[handle] change_credit: who_triggered={message.from_user.id} {message.from_user.first_name} {chat_name} {message.text}"
+            f"[handle] change_credit: who_triggered={message.from_user.id}:{message.from_user.first_name} {chat_name} {message.text}"
         )
         await _handle_impl(message)
     except Exception as er:
