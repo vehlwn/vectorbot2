@@ -154,9 +154,9 @@ async def _handle_impl(message: telebot.types.Message):
 async def handle(message: telebot.types.Message):
     try:
         if message.chat.type == "private":
-            chat_name = f"private:{message.chat.id}:{message.chat.first_name}"
+            chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.first_name}"
         else:
-            chat_name = f"group:{message.chat.id}:{message.chat.title}"
+            chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.title}"
         logger.info(f"[handle] change_credit: {chat_name} {message.text}")
         await _handle_impl(message)
     except Exception as er:
