@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH client
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{secrets.RUNNER_SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          cat << EOF > ~/.ssh/config
+            Host prod
+            HostName ${{secrets.DEPLOY_HOST}}
+            Port ${{secrets.SSH_PORT}}
+            User vectorbot2
+            StrictHostKeyChecking no
+          EOF
+
+      - name: Run remote script to clone changes
+        run: ssh prod "${{secrets.DEPLOY_SCRIPT}}"
