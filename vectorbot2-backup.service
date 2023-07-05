@@ -1,0 +1,5 @@
+[Unit]
+Description = Backup vectorbot2 database
+
+[Service]
+ExecStart = /path/to/backup/script.sh

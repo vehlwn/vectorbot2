@@ -1,0 +1,8 @@
+[Unit]
+Description = Backup vectorbot2 database
+
+[Timer]
+OnCalendar = weekly
+
+[Install]
+WantedBy = timers.target
