@@ -2,4 +2,5 @@
 Description = Backup vectorbot2 database
 
 [Service]
+User = vectorbot2
 ExecStart = /path/to/backup/script.sh
