@@ -8,8 +8,8 @@ from async_bot import bot
 from logger import logger
 from logger import logger
 from models import Currency, Point, User
+from settings import settings
 import database
-import settings
 import strings
 
 

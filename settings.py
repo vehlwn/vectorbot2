@@ -1,14 +1,19 @@
-import dotenv
-import os
+import json
 
-dotenv.load_dotenv()
 
-MAX_CURRENCY_LEN = int(os.environ["MAX_CURRENCY_LEN"])
-LOGGER_FORMAT = os.environ["LOGGER_FORMAT"]
-LOG_LEVEL = os.environ["LOG_LEVEL"]
-BOT_TOKEN = os.environ["BOT_TOKEN"]
-CHANGE_CREDIT_PATTERN = os.environ["CHANGE_CREDIT_PATTERN"]
-SUPER_ADMIN_ID = int(os.environ["SUPER_ADMIN_ID"])
-DELTA_LIMIT = int(os.environ["DELTA_LIMIT"])
-SQLALCHEMY_DATABASE_URI = os.environ["SQLALCHEMY_DATABASE_URI"]
-MAX_BALLS_ROWS = int(os.environ["MAX_BALLS_ROWS"])
+class Settings:
+    def __init__(self, path: str) -> None:
+        with open(path, "rt") as f:
+            obj = json.load(f)
+            self.MAX_CURRENCY_LEN = obj["MAX_CURRENCY_LEN"]
+            self.LOGGER_FORMAT = obj["LOGGER_FORMAT"]
+            self.LOG_LEVEL = obj["LOG_LEVEL"]
+            self.BOT_TOKEN = obj["BOT_TOKEN"]
+            self.CHANGE_CREDIT_PATTERN = obj["CHANGE_CREDIT_PATTERN"]
+            self.SUPER_ADMIN_ID = int(obj["SUPER_ADMIN_ID"])
+            self.DELTA_LIMIT = int(obj["DELTA_LIMIT"])
+            self.SQLALCHEMY_DATABASE_URI = obj["SQLALCHEMY_DATABASE_URI"]
+            self.MAX_BALLS_ROWS = int(obj["MAX_BALLS_ROWS"])
+
+
+settings = Settings("app.json")

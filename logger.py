@@ -1,7 +1,7 @@
 import logging
 import telebot
 
-import settings
+from settings import settings
 
 def setup_logger():
     logger = logging.getLogger("vectorbot2")

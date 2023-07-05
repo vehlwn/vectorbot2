@@ -10,7 +10,6 @@ greenlet==2.0.2
 idna==3.4
 multidict==6.0.4
 pyTelegramBotAPI==4.12.0
-python-dotenv==1.0.0
 requests==2.31.0
 SQLAlchemy==2.0.17
 typing_extensions==4.7.0

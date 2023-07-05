@@ -1,6 +1,6 @@
 from async_bot import bot
 from . import ping, get_my_id, credits, rank, balls, change_credit
-import settings
+from settings import settings
 
 
 _CHAT_TYPES = ["private", "group", "supergroup"]

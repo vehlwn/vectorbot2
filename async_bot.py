@@ -1,5 +1,5 @@
 import telebot.async_telebot
 
-import settings
+from settings import settings
 
 bot = telebot.async_telebot.AsyncTeleBot(settings.BOT_TOKEN)
