@@ -11,9 +11,11 @@ jobs:
 
     steps:
       - name: Set up SSH client
+        env:
+          PRIVATE_KEY: ${{secrets.RUNNER_SSH_PRIVATE_KEY}}
         run: |
           mkdir -p ~/.ssh
-          echo "${{secrets.RUNNER_SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
+          echo "${PRIVATE_KEY}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           cat << EOF > ~/.ssh/config
             Host prod
