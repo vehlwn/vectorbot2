@@ -21,7 +21,7 @@ async def handle(message: telebot.types.Message):
         logger.info(f"[handle] /help: {create_who_triggered_str(message)}")
         text = "Available commands:\n\n"
         for command, description in AVAILABLE_COMMANDS:
-            text += f"{command} - {description}\n"
+            text += f"- {command} - {description}\n"
         await bot.reply_to(message, text)
     except Exception as er:
         await bot.reply_to(message, f"Error: {er}")
