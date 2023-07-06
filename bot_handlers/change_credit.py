@@ -5,7 +5,7 @@ import telebot
 import traceback
 
 from async_bot import bot
-from logger import logger
+from logger import logger, create_who_triggered_str
 from logger import logger
 from models import Currency, Point, User
 from settings import settings
@@ -155,14 +155,8 @@ async def _handle_impl(message: telebot.types.Message):
 
 async def handle(message: telebot.types.Message):
     try:
-        if message.chat.type == "private":
-            chat_name = (
-                f"{message.chat.type}:{message.chat.id}:{message.chat.first_name}"
-            )
-        else:
-            chat_name = f"{message.chat.type}:{message.chat.id}:{message.chat.title}"
         logger.info(
-            f"[handle] change_credit: who_triggered={message.from_user.id}:{message.from_user.first_name} {chat_name} {message.text}"
+            f"[handle] change_credit: {create_who_triggered_str(message)} text={message.text}"
         )
         await _handle_impl(message)
     except Exception as er:
