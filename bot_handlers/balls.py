@@ -3,7 +3,7 @@ import telebot
 import traceback
 
 from async_bot import bot
-from logger import logger
+from logger import logger, create_who_triggered_str
 from models import Currency, Point, User
 from settings import settings
 import database
@@ -35,9 +35,7 @@ async def _handle_impl(message: telebot.types.Message):
 
 async def handle(message: telebot.types.Message):
     try:
-        logger.info(
-            f"[handle] balls: {message.from_user.id} {message.from_user.first_name}"
-        )
+        logger.info(f"[handle] /balls: {create_who_triggered_str(message)}")
         await _handle_impl(message)
     except Exception as er:
         await bot.reply_to(message, f"Error: {er}")

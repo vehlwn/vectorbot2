@@ -4,7 +4,7 @@ import traceback
 import typing
 
 from async_bot import bot
-from logger import logger
+from logger import logger, create_who_triggered_str
 from models import Currency, Point, User
 import database
 import strings
@@ -55,7 +55,7 @@ async def _handle_impl(message: telebot.types.Message):
 async def handle(message: telebot.types.Message):
     try:
         logger.info(
-                f"[handle] rank: {message.from_user.id} {message.from_user.first_name}: {message.text}"
+            f"[handle] /rank: {create_who_triggered_str(message)} text={message.text}"
         )
         await _handle_impl(message)
     except Exception as er:

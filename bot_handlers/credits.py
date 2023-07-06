@@ -4,7 +4,7 @@ import typing
 import traceback
 
 from async_bot import bot
-from logger import logger
+from logger import logger, create_who_triggered_str
 from models import Currency, Point, User
 import database
 import strings
@@ -40,9 +40,7 @@ async def _my_credits_command(message: telebot.types.Message):
 
 async def handle(message: telebot.types.Message):
     try:
-        logger.info(
-            f"[handle] credits: {message.from_user.id} {message.from_user.first_name}"
-        )
+        logger.info(f"[handle] /credits: {create_who_triggered_str(message)}")
         if message.reply_to_message is None:
             await _my_credits_command(message)
             return
