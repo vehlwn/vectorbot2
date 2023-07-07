@@ -48,7 +48,10 @@ async def _handle_impl(message: telebot.types.Message):
         return ret
 
     text += await concat_values(best)
-    text += await concat_values(worst)
+
+    if len(worst) != 0:
+        text += f"Меньше всего {currency}баллов:\n"
+        text += await concat_values(worst)
     await bot.reply_to(message, text)
 
 
