@@ -30,6 +30,8 @@ async def _handle_impl(message: telebot.types.Message):
                 row.count,
                 strings.get_holders_message_for_holders(row.count),
             )
+        if len(text) == 0:
+            text = "В этом чате нет баллов"
     await bot.reply_to(message, text)
 
 
