@@ -13,7 +13,7 @@ async def main():
     models.create_all()
     logger.info("DB models created")
     logger.info("Bot is listening")
-    await bot.polling()
+    await bot.infinity_polling()
 
 
 if __name__ == "__main__":
