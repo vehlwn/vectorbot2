@@ -1,8 +1,15 @@
 import typing
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    Session,
+)
+from sqlalchemy import ForeignKey, UniqueConstraint, select
 
 import database
+from logger import logger
 
 
 class Base(DeclarativeBase):
@@ -41,14 +48,26 @@ class User(Base):
     chat_id: Mapped[int]
     user_id: Mapped[int]
 
-    points: Mapped[typing.List["Point"]] = relationship(
-        cascade="all, delete-orphan"
-    )
+    points: Mapped[typing.List["Point"]] = relationship(cascade="all, delete-orphan")
 
     __table_args__ = (UniqueConstraint("chat_id", "user_id"),)
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, chat_id={self.chat_id!r}, user_id={self.user_id!r})"
+
+
+def garbage_collect_currencies(session: Session):
+    logger.info("garbage_collect_currencies")
+    result = session.scalars(
+        select(Currency).outerjoin(Point).where(Point.currency_id.is_(None))
+    )
+    if result:
+        logger.info("Deleting orphaned currencies:")
+        for row in result:
+            logger.info(row)
+            session.delete(row)
+    else:
+        logger.info("Nothing to delete")
 
 
 def create_all():

@@ -7,20 +7,10 @@ import traceback
 from async_bot import bot
 from logger import logger, create_who_triggered_str
 from logger import logger
-from models import Currency, Point, User
+from models import Currency, Point, User, garbage_collect_currencies
 from settings import settings
 import database
 import strings
-
-
-def _garbage_collect_currencies(session: sqlalchemy.orm.Session):
-    result = session.scalars(
-        select(Currency).outerjoin(Point).where(Point.currency_id.is_(None))
-    )
-    logger.info("Deleting orphaned currencies:")
-    for row in result:
-        logger.info(row)
-        session.delete(row)
 
 
 def _get_or_create_currency(
@@ -67,9 +57,9 @@ def _increment_credit(chat_id: int, user_id: int, currency: str, value: int):
                 logger.info(f"Updating points: {point_row}")
                 point_row.value += value
                 if point_row.value == 0:
-                    logger.info("Deleting zero value")
+                    logger.info(f"Deleting zero value: {point_row}")
                     session.delete(point_row)
-                    _garbage_collect_currencies(session)
+                    garbage_collect_currencies(session)
 
 
 def _parse_credit_line(text: str):

@@ -7,7 +7,7 @@ import typing
 
 from async_bot import bot
 from logger import logger, create_who_triggered_str
-from models import Currency, Point, User
+from models import Currency, Point, User, garbage_collect_currencies
 import database
 import strings
 
@@ -28,6 +28,7 @@ async def _create_leaderboard(
         .order_by(desc(Point.value))
     )
     ret = []
+    has_deleted_users = False
     for row in result:
         try:
             first_name = await _get_first_name(row.User.user_id)
@@ -36,8 +37,11 @@ async def _create_leaderboard(
             if "chat not found" in er.description:
                 logger.info(f"Deleting dead user: {row.User}")
                 session.delete(row.User)
+                has_deleted_users = True
             continue
         ret.append((first_name, row.value))
+    if has_deleted_users:
+        garbage_collect_currencies(session)
     return ret
 
 
