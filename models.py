@@ -42,7 +42,7 @@ class User(Base):
     user_id: Mapped[int]
 
     points: Mapped[typing.List["Point"]] = relationship(
-        cascade="all, delete-orphan", passive_deletes=True
+        cascade="all, delete-orphan"
     )
 
     __table_args__ = (UniqueConstraint("chat_id", "user_id"),)

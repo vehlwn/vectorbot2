@@ -1,4 +1,6 @@
 from sqlalchemy import select, desc
+from telebot.asyncio_helper import ApiTelegramException
+import sqlalchemy.orm
 import telebot
 import traceback
 import typing
@@ -15,7 +17,33 @@ async def _get_first_name(user_id: int):
     return chat.first_name
 
 
-async def _handle_impl(message: telebot.types.Message):
+async def _create_leaderboard(
+    session: sqlalchemy.orm.Session, chat_id: int, currency: str
+):
+    result = session.execute(
+        select(User, Point.value)
+        .join(User.points)
+        .join(Point.currency)
+        .where((User.chat_id == chat_id) & (Currency.name == currency))
+        .order_by(desc(Point.value))
+    )
+    ret = []
+    for row in result:
+        try:
+            first_name = await _get_first_name(row.User.user_id)
+        except ApiTelegramException as er:
+            logger.error(f"Failed to get user info: {er}")
+            if "chat not found" in er.description:
+                logger.info(f"Deleting dead user: {row.User}")
+                session.delete(row.User)
+            continue
+        ret.append((first_name, row.value))
+    return ret
+
+
+async def _handle_impl(
+    session: sqlalchemy.orm.Session, message: telebot.types.Message
+):
     argument = telebot.util.extract_arguments(typing.cast(str, message.text))
     if len(argument) == 0:
         currency = strings.CREDIT_BOT_DEFAULT_CURRENCY
@@ -23,17 +51,7 @@ async def _handle_impl(message: telebot.types.Message):
         currency = argument
 
     chat_id = message.chat.id
-    with database.Session.begin() as session:
-        result = session.execute(
-            select(User.user_id, Point.value)
-            .join(User.points)
-            .join(Point.currency)
-            .where((User.chat_id == chat_id) & (Currency.name == currency))
-            .order_by(desc(Point.value))
-        )
-        leaderboard = []
-        for row in result:
-            leaderboard.append((row.user_id, row.value))
+    leaderboard = await _create_leaderboard(session, chat_id, currency)
 
     best = leaderboard[:3]
     worst = leaderboard[3:][-3:]
@@ -43,8 +61,8 @@ async def _handle_impl(message: telebot.types.Message):
 
     async def concat_values(leaderboard):
         ret = ""
-        for user_id, value in leaderboard:
-            ret += "{} ➔ {}\n".format(await _get_first_name(user_id), str(value))
+        for first_name, value in leaderboard:
+            ret += "{} ➔ {}\n".format(first_name, str(value))
         return ret
 
     text += await concat_values(best)
@@ -60,7 +78,8 @@ async def handle(message: telebot.types.Message):
         logger.info(
             f"[handle] /rank: {create_who_triggered_str(message)} text={message.text}"
         )
-        await _handle_impl(message)
+        with database.Session.begin() as session:
+            await _handle_impl(session, message)
     except Exception as er:
         await bot.reply_to(message, f"Error: {er}")
         traceback.print_exc()
