@@ -61,13 +61,10 @@ def garbage_collect_currencies(session: Session):
     result = session.scalars(
         select(Currency).outerjoin(Point).where(Point.currency_id.is_(None))
     )
-    if result:
-        logger.info("Deleting orphaned currencies:")
-        for row in result:
-            logger.info(row)
-            session.delete(row)
-    else:
-        logger.info("Nothing to delete")
+    logger.info("Deleting orphaned currencies:")
+    for row in result:
+        logger.info(row)
+        session.delete(row)
 
 
 def create_all():
