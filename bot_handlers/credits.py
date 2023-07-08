@@ -47,7 +47,7 @@ async def handle(message: telebot.types.Message):
         user = message.reply_to_message.from_user
         credits = _get_credits_string(message.chat.id, user.id)
         if len(credits) == 0:
-            text = "У {user.first_name} нет баллов."
+            text = f"У {user.first_name} нет баллов."
         else:
             text = f"У {user.first_name}:\n{credits}"
         await bot.reply_to(message, text)
