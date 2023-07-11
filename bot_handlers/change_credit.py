@@ -92,22 +92,6 @@ async def _handle_impl(message: telebot.types.Message):
         return
 
     (points, currency) = parsed_result
-    if len(currency) > settings.MAX_CURRENCY_LEN:
-        await bot.reply_to(
-            message,
-            f"Слишком длинно! Лимит на длину - {settings.MAX_CURRENCY_LEN} символов!",
-        )
-        return
-
-    if (
-        message.from_user.id != settings.SUPER_ADMIN_ID
-        and abs(points) > settings.DELTA_LIMIT
-    ):
-        await bot.reply_to(
-            message,
-            f"Слишком много! Лимит на изменение - {settings.DELTA_LIMIT} {currency}баллов!",
-        )
-        return
 
     if message.reply_to_message is None:
         whom_to_credit = message.from_user
@@ -129,6 +113,21 @@ async def _handle_impl(message: telebot.types.Message):
         should_increment = True
 
     if should_increment:
+        if len(currency) > settings.MAX_CURRENCY_LEN:
+            await bot.reply_to(
+                message,
+                f"Слишком длинно! Лимит на длину - {settings.MAX_CURRENCY_LEN} символов!",
+            )
+            return
+        if (
+            message.from_user.id != settings.SUPER_ADMIN_ID
+            and abs(points) > settings.DELTA_LIMIT
+        ):
+            await bot.reply_to(
+                message,
+                f"Слишком много! Лимит на изменение - {settings.DELTA_LIMIT} {currency}баллов!",
+            )
+            return
         logger.info(
             f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
         )
