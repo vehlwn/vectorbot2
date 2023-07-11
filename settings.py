@@ -15,9 +15,14 @@ class Settings:
             self.BOT_TOKEN = obj["BOT_TOKEN"]
             self.CHANGE_CREDIT_PATTERN = obj["CHANGE_CREDIT_PATTERN"]
             self.SUPER_ADMIN_ID = int(obj["SUPER_ADMIN_ID"])
-            self.DELTA_LIMIT = int(obj["DELTA_LIMIT"])
             self.SQLALCHEMY_DATABASE_URI = obj["SQLALCHEMY_DATABASE_URI"]
             self.MAX_BALLS_ROWS = int(obj["MAX_BALLS_ROWS"])
+            self.POINTS_REFILL_RATE = self.__parse_refill_rate(obj)
+            self.POINTS_BURST_SIZE = int(obj["POINTS_BURST_SIZE"])
+
+    def __parse_refill_rate(self, obj) -> float:
+        tup = tuple(map(float, obj["POINTS_REFILL_RATE"].split("/", 2)))
+        return tup[0] / tup[1]
 
 
 settings = Settings("app.json")

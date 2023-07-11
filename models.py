@@ -1,3 +1,4 @@
+from datetime import datetime
 import typing
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -9,6 +10,7 @@ from sqlalchemy.orm import (
 from sqlalchemy import ForeignKey, UniqueConstraint, select
 
 import database
+from settings import settings
 from logger import logger
 
 
@@ -49,11 +51,44 @@ class User(Base):
     user_id: Mapped[int]
 
     points: Mapped[typing.List["Point"]] = relationship(cascade="all, delete-orphan")
+    token_bucket: Mapped["TokenBucket"] = relationship(cascade="all, delete-orphan")
 
     __table_args__ = (UniqueConstraint("chat_id", "user_id"),)
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, chat_id={self.chat_id!r}, user_id={self.user_id!r})"
+
+
+class TokenBucket(Base):
+    __tablename__ = "token_buckets"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    current_size: Mapped[float] = mapped_column(nullable=False)
+    last_refill: Mapped[datetime] = mapped_column(nullable=False)
+    user_id = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+
+    def __repr__(self) -> str:
+        return "TokenBucket(id={!r}, current_size={!r}, last_refill={!r}, user_id={!r})".format(
+            self.id, self.current_size, self.last_refill, self.user_id
+        )
+
+    def consume(self, N: float) -> bool:
+        if N > settings.POINTS_BURST_SIZE:
+            return False
+
+        self._refill()
+        if N <= self.current_size:
+            self.current_size -= N
+            return True
+        return False
+
+    def _refill(self):
+        now = datetime.utcnow()
+        time_elapsed = (now - self.last_refill).total_seconds()
+        tokens_to_add = time_elapsed * settings.POINTS_REFILL_RATE
+        self.current_size = min(
+            settings.POINTS_BURST_SIZE, self.current_size + tokens_to_add
+        )
+        self.last_refill = now
 
 
 def garbage_collect_currencies(session: Session):
