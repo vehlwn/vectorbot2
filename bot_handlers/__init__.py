@@ -29,7 +29,7 @@ async def register_all():
         rank.handle, commands=["rank"], chat_types=_CHAT_TYPES
     )
     bot.register_message_handler(
-        balls.handle, commands=["balls"], chat_types=_CHAT_TYPES
+        balls.handle, commands=["balls", "шары"], chat_types=_CHAT_TYPES
     )
     bot.register_message_handler(
         change_credit.handle,
