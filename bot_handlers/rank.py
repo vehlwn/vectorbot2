@@ -57,8 +57,9 @@ async def _handle_impl(
     chat_id = message.chat.id
     leaderboard = await _create_leaderboard(session, chat_id, currency)
 
-    best = leaderboard[:3]
-    worst = leaderboard[3:][-3:]
+    TOP_NUMBER = 5
+    best = leaderboard[:TOP_NUMBER]
+    worst = leaderboard[TOP_NUMBER:][-TOP_NUMBER:]
     text = f"Больше всего {currency}баллов:\n"
     if len(best) == 0:
         text += "ни у кого!"
