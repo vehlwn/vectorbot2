@@ -130,6 +130,7 @@ async def _handle_impl(message: telebot.types.Message):
         and message.from_user.id == whom_to_credit.id
     ):
         text = strings.SELF_LIKE
+        logger.info("Self like")
     else:
         text = strings.get_string_for_points(currency, points)
         should_increment = True
