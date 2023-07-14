@@ -129,11 +129,7 @@ async def _handle_impl(message: telebot.types.Message):
         message.from_user.id != settings.SUPER_ADMIN_ID
         and message.from_user.id == whom_to_credit.id
     ):
-        if points > 0:
-            text = strings.SELF_LIKE
-        else:
-            text = strings.CREDIT_MINUS_ITSELF
-            should_increment = True
+        text = strings.SELF_LIKE
     else:
         text = strings.get_string_for_points(currency, points)
         should_increment = True
