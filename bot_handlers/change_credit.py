@@ -165,8 +165,8 @@ async def _handle_impl(message: telebot.types.Message):
             ):
                 await bot.reply_to(
                     message,
-                    "Слишком быстро! Лимит на изменение - {} баллов/с!".format(
-                        round(settings.POINTS_REFILL_RATE, 2)
+                    "Слишком быстро! Лимит на изменение - {} баллов/мин!".format(
+                        round(settings.POINTS_REFILL_RATE * 60.0, 2)
                     ),
                 )
                 return
