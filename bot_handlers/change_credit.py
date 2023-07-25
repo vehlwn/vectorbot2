@@ -129,8 +129,6 @@ async def _handle_impl(message: telebot.types.Message):
         logger.info("Self like")
         await bot.reply_to(message, text)
         return
-    else:
-        text = strings.get_string_for_points(currency, points)
 
     if len(currency) > settings.MAX_CURRENCY_LEN:
         await bot.reply_to(
@@ -179,6 +177,8 @@ async def _handle_impl(message: telebot.types.Message):
         reply_to_message = message
     else:
         reply_to_message = message.reply_to_message
+
+    text = strings.get_string_for_points(currency, points)
     await bot.reply_to(reply_to_message, text)
 
 
