@@ -121,58 +121,59 @@ async def _handle_impl(message: telebot.types.Message):
     else:
         whom_to_credit = message.reply_to_message.from_user
 
-    should_increment = False
     if (
         message.from_user.id != settings.SUPER_ADMIN_ID
         and message.from_user.id == whom_to_credit.id
     ):
         text = strings.SELF_LIKE
         logger.info("Self like")
+        await bot.reply_to(message, text)
+        return
     else:
         text = strings.get_string_for_points(currency, points)
-        should_increment = True
 
-    if should_increment:
-        if len(currency) > settings.MAX_CURRENCY_LEN:
-            await bot.reply_to(
-                message,
-                f"Слишком длинно! Лимит на длину - {settings.MAX_CURRENCY_LEN} символов!",
-            )
-            return
+    if len(currency) > settings.MAX_CURRENCY_LEN:
+        await bot.reply_to(
+            message,
+            f"Слишком длинно! Лимит на длину - {settings.MAX_CURRENCY_LEN} символов!",
+        )
+        return
+
+    if (
+        message.from_user.id != settings.SUPER_ADMIN_ID
+        and abs(points) > settings.POINTS_BURST_SIZE
+    ):
+        await bot.reply_to(
+            message,
+            "Слишком много! Лимит на изменение - {} {}баллов!".format(
+                settings.POINTS_BURST_SIZE, currency
+            ),
+        )
+        return
+
+    with database.Session.begin() as session:
         if (
             message.from_user.id != settings.SUPER_ADMIN_ID
-            and abs(points) > settings.POINTS_BURST_SIZE
+            and not _check_token_bucket_limit(
+                session,
+                message.chat.id,
+                message.from_user.id,
+                points,
+            )
         ):
             await bot.reply_to(
                 message,
-                "Слишком много! Лимит на изменение - {} {}баллов!".format(
-                    settings.POINTS_BURST_SIZE, currency
+                "Слишком быстро! Лимит на изменение - {} баллов/мин!".format(
+                    round(settings.POINTS_REFILL_RATE * 60.0, 2)
                 ),
             )
             return
-        with database.Session.begin() as session:
-            if (
-                message.from_user.id != settings.SUPER_ADMIN_ID
-                and not _check_token_bucket_limit(
-                    session,
-                    message.chat.id,
-                    message.from_user.id,
-                    points,
-                )
-            ):
-                await bot.reply_to(
-                    message,
-                    "Слишком быстро! Лимит на изменение - {} баллов/мин!".format(
-                        round(settings.POINTS_REFILL_RATE * 60.0, 2)
-                    ),
-                )
-                return
-            logger.info(
-                f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
-            )
-            _increment_credit(
-                session, message.chat.id, whom_to_credit.id, currency, points
-            )
+        logger.info(
+            f"{whom_to_credit.id=} {whom_to_credit.first_name} {points=} {currency=}"
+        )
+        _increment_credit(
+            session, message.chat.id, whom_to_credit.id, currency, points
+        )
 
     if message.reply_to_message is None:
         reply_to_message = message
