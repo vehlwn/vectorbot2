@@ -9,9 +9,9 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy import ForeignKey, UniqueConstraint, select
 
-import database
-from settings import settings
 from logger import logger
+import database
+import settings
 
 
 class Base(DeclarativeBase):

@@ -1,6 +1,5 @@
 from sqlalchemy import select
 import telebot
-import typing
 import traceback
 
 from async_bot import bot

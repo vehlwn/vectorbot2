@@ -1,9 +1,9 @@
 import telebot
 
-from async_bot import bot
 from . import start, help, ping, get_my_id, credits, rank, balls, change_credit
-from settings import settings
+from async_bot import bot
 from logger import logger
+import settings
 
 
 _CHAT_TYPES = ["private", "group", "supergroup"]

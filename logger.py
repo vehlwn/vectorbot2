@@ -1,7 +1,7 @@
 import logging
 import telebot
 
-from settings import settings
+import settings
 
 
 def _find_numeric_level(s: str) -> int:

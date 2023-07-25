@@ -1,7 +1,6 @@
 .cache/
 .mypy_cache/
 __pycache__/
-app.json
-db-prod.sqlite
 db-test.sqlite
+settings/private.py
 venv/

@@ -16,8 +16,8 @@ from models import (
     TokenBucket,
     garbage_collect_currencies,
 )
-from settings import settings
 import database
+import settings
 import strings
 
 
