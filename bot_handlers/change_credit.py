@@ -95,10 +95,7 @@ def _parse_credit_line(text: str):
         return None
     currency = match[3]
     sign = +1 if match[1] == "+" else -1
-    if len(match[2]) > 0:
-        points = int(match[2])
-    else:
-        points = 1
+    points = int(match[2])
     points = sign * points
     return points, currency
 

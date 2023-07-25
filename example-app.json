@@ -7,7 +7,7 @@
     "sqlalchemy.engine": "warning"
   },
   "MAX_CURRENCY_LEN": 10,
-  "CHANGE_CREDIT_PATTERN": "([+-])(\\d*) (\\w+)бал",
+  "CHANGE_CREDIT_PATTERN": "([+-])(\\d+) (\\w+)бал",
   "SUPER_ADMIN_ID": 123,
   "POINTS_BURST_SIZE": 100,
   "POINTS_REFILL_RATE": "100/60",
