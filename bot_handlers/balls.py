@@ -22,15 +22,15 @@ async def _handle_impl(message: telebot.types.Message):
             .group_by(Currency.id)
             .order_by(desc("count"))
             .limit(count)
-        )
-        text = ""
+        ).all()
+        text = "Больше всего держателей:\n"
         for row in result:
             text += "{}баллы ➔ {} {}\n".format(
                 row.name,
                 row.count,
                 strings.get_holders_message_for_holders(row.count),
             )
-        if len(text) == 0:
+        if len(result) == 0:
             text = "В этом чате нет баллов"
     await bot.reply_to(message, text)
 
