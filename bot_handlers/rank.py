@@ -7,7 +7,7 @@ import typing
 
 from async_bot import bot
 from logger import logger, create_who_triggered_str
-from models import Currency, Point, User, garbage_collect_currencies
+from models import Currency, Point, User
 import database
 import strings
 
@@ -28,20 +28,17 @@ async def _create_leaderboard(
         .order_by(desc(Point.value))
     )
     ret = []
-    has_deleted_users = False
     for row in result:
         try:
             first_name = await _get_first_name(row.User.user_id)
         except ApiTelegramException as er:
-            logger.error(f"Failed to get user info: {er}")
             if "chat not found" in er.description:
-                logger.info(f"Deleting dead user: {row.User}")
-                session.delete(row.User)
-                has_deleted_users = True
-            continue
+                logger.error(f"User not found: {row.User}")
+                first_name = "<user not found>"
+            else:
+                logger.error(f"Unknown error when getting user info: {er}")
+                continue
         ret.append((first_name, row.value))
-    if has_deleted_users:
-        garbage_collect_currencies(session)
     return ret
 
 
