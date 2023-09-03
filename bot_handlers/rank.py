@@ -34,10 +34,11 @@ async def _create_leaderboard(
         except ApiTelegramException as er:
             if "chat not found" in er.description:
                 logger.error(f"User not found: {row.User}")
-                first_name = "<user not found>"
             else:
-                logger.error(f"Unknown error when getting user info: {er}")
-                continue
+                logger.error(
+                    f"Unknown error when getting user info for {row.User}: {er}"
+                )
+            continue
         ret.append((first_name, row.value))
     return ret
 
