@@ -106,8 +106,8 @@ def _get_balance_str(
     ).first()
     if point_value is None:
         point_value = 0
-    return "Баланс: {} {}".format(
-        point_value, strings.get_points_message_for_points(point_value)
+    return "Баланс: {} {}{}".format(
+        point_value, currency, strings.get_points_message_for_points(point_value)
     )
 
 
