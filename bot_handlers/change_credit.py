@@ -88,6 +88,29 @@ def _increment_credit(
             garbage_collect_currencies(session)
 
 
+def _get_balance_str(
+    session: sqlalchemy.orm.Session,
+    chat_id: int,
+    user_id: int,
+    currency: str,
+) -> str:
+    point_value = session.scalars(
+        select(Point.value)
+        .join(User.points)
+        .join(Point.currency)
+        .where(
+            (User.chat_id == chat_id)
+            & (User.user_id == user_id)
+            & (Currency.name == currency)
+        )
+    ).first()
+    if point_value is None:
+        point_value = 0
+    return "Баланс: {} {}".format(
+        point_value, strings.get_points_message_for_points(point_value)
+    )
+
+
 def _parse_credit_line(text: str):
     match = re.search(settings.CHANGE_CREDIT_PATTERN, text)
     if match is None:
@@ -172,6 +195,9 @@ async def _handle_impl(message: telebot.types.Message):
         _increment_credit(
             session, message.chat.id, whom_to_credit.id, currency, points
         )
+        balance_str = _get_balance_str(
+            session, message.chat.id, whom_to_credit.id, currency
+        )
 
     if message.reply_to_message is None:
         reply_to_message = message
@@ -179,6 +205,7 @@ async def _handle_impl(message: telebot.types.Message):
         reply_to_message = message.reply_to_message
 
     text = strings.get_string_for_points(currency, points)
+    text += "\n" + balance_str
     await bot.reply_to(reply_to_message, text)
 
 
