@@ -11,25 +11,46 @@ _CHAT_TYPES = ["private", "group", "supergroup"]
 
 async def register_all():
     bot.register_message_handler(
-        start.handle, commands=["start"], chat_types=_CHAT_TYPES
+        start.handle,
+        commands=["start"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        help.handle, commands=["help"], chat_types=_CHAT_TYPES
+        help.handle,
+        commands=["help"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        ping.handle, commands=["ping"], chat_types=_CHAT_TYPES
+        ping.handle,
+        commands=["ping"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        get_my_id.handle, commands=["get_my_id"], chat_types=_CHAT_TYPES
+        get_my_id.handle,
+        commands=["get_my_id"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        credits.handle, commands=["credits"], chat_types=_CHAT_TYPES
+        credits.handle,
+        commands=["credits"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        rank.handle, commands=["rank"], chat_types=_CHAT_TYPES
+        rank.handle,
+        commands=["rank"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
-        balls.handle, commands=["balls", "шары"], chat_types=_CHAT_TYPES
+        balls.handle,
+        commands=["balls", "шары"],
+        chat_types=_CHAT_TYPES,
+        match_bot_username=True,
     )
     bot.register_message_handler(
         change_credit.handle,
